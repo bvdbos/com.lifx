@@ -1,0 +1,107 @@
+{
+  "id": "com.lifx",
+  "version": "1.0.0",
+  "compatibility": ">=0.1.0",
+  "name": {
+    "en": "LIFX",
+    "nl": "LIFX"
+  },
+  "description": {
+    "en": "LIFX is a wifi enabled, multi-color, energy efficient smart LED light bulb that you can control with your smartphone.",
+    "nl": "LIFX is een energie bewuste, smart LED lamp die je over wifi kunt besturen met je smartdevice.",
+  },
+  "author": {
+    "name": "Robin Bolscher",
+    "email": "robin@athom.nl"
+  },
+  "permissions": [
+    "homey:manager:speech-output",
+    "homey:manager:speech-ledring",
+    "homey:manager:flow"
+  ],
+  "speech": [
+    {
+      "id": "hello",
+      "importance": 0.6,
+      "synonyms": {
+        "en": [
+          "hello",
+          "hi",
+          "hey"
+        ]
+      }
+    }
+  ],
+  "drivers": [
+    {
+      "id": "lifx",
+      "name": {
+        "en": "LIFX"
+      },
+      "class": "light",
+      "capabilities": [
+        "name",
+        "onoff",
+        "color"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_bulb"
+          }
+        },
+        {
+          "id": "add_bulb",
+          "template": "add_devices"
+        }
+      ]
+    }
+  ],
+  "flow": {
+    "actions": [
+      {
+        "id": "on",
+        "title": {
+          "en": "Turn lights on",
+          "nl": "Zet lampen aan"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "placeholder": { "en": "Which light bulb", "nl": "Welke lamp" }
+          }
+        ]
+      },
+      {
+        "id": "off",
+        "title": {
+          "en": "Turn lights off",
+          "nl": "Zet lampen uit"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "placeholder": { "en": "Which light bulb", "nl": "Welke lamp" }
+          }
+        ]
+      },
+      {
+        "id": "color",
+        "title": {
+          "en": "Set light color to",
+          "nl": "Stel kleur van lampen in"
+        },
+        "args": [
+          {
+            "name": "bulb_color",
+            "type": "color"
+          }
+        ]
+      }
+    ]
+  }
+}
