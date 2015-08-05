@@ -8,7 +8,7 @@
   },
   "description": {
     "en": "LIFX is a wifi enabled, multi-color, energy efficient smart LED light bulb that you can control with your smartphone.",
-    "nl": "LIFX is een energie bewuste, smart LED lamp die je over wifi kunt besturen met je smartdevice.",
+    "nl": "LIFX is een energie-efficiënte, smart LED lamp die je over wifi kunt besturen met je smart device."
   },
   "author": {
     "name": "Robin Bolscher",
@@ -41,8 +41,7 @@
       "class": "light",
       "capabilities": [
         "name",
-        "onoff",
-        "color"
+        "onoff"
       ],
       "pair": [
         {
@@ -59,6 +58,9 @@
       ]
     }
   ],
+  "dependencies": {
+    "lifx": "*"
+  },
   "flow": {
     "actions": [
       {
@@ -90,6 +92,7 @@
         ]
       },
       {
+        //TODO color flow should be split to hue/saturation/temperature/onoff?
         "id": "color",
         "title": {
           "en": "Set light color to",

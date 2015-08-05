@@ -20,8 +20,17 @@ App.prototype.init = function(){
 
 		//TODO integrate color object
 		// Set given color on bulb(s)
-		if(args.color){
-			driver.capabilities.color.set( args.device.data, args.color, callback )
+		if(args.hue){
+			driver.capabilities.hue.set( args.device.data, args.hue, callback )
+		}
+		if(args.saturation){
+			driver.capabilities.saturation.set( args.device.data, args.saturation, callback )
+		}
+		if(args.brightness){
+			driver.capabilities.brightness.set( args.device.data, args.brightness, callback )
+		}
+		if(args.temperature){
+			driver.capabilities.temperature.set( args.device.data, args.temperature, callback )
 		}
 	});
 
@@ -40,8 +49,19 @@ App.prototype.init = function(){
 		var driver = Homey.manager('drivers').getDriver( args.device.driver.id );
 
 		//TODO integrate color object
-		//Set temperature on kettle
-		driver.capabilities.color.set( args.device.data, args, callback );
+		// Set given color on bulb(s)
+		if(args.hue){
+			driver.capabilities.hue.set( args.device.data, args.hue, callback )
+		}
+		if(args.saturation){
+			driver.capabilities.saturation.set( args.device.data, args.saturation, callback )
+		}
+		if(args.brightness){
+			driver.capabilities.brightness.set( args.device.data, args.brightness, callback )
+		}
+		if(args.temperature){
+			driver.capabilities.temperature.set( args.device.data, args.temperature, callback )
+		}
 	});
 };
 
