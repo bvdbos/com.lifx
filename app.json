@@ -2,109 +2,62 @@
   "id": "com.lifx",
   "version": "1.0.0",
   "compatibility": ">=0.1.0",
+  "category": "lights",
   "name": {
     "en": "LIFX",
     "nl": "LIFX"
   },
   "description": {
-    "en": "LIFX is a wifi enabled, multi-color, energy efficient smart LED light bulb that you can control with your smartphone.",
-    "nl": "LIFX is een energie-efficiënte, smart LED lamp die je over wifi kunt besturen met je smart device."
+    "en": "This app contains the driver that enables you to control your LIFX Wi-Fi light bulbs",
+    "nl": "Deze app biedt ondersteuning voor het besturen van je LIFX wifi lampen"
+  },
+  "images": {
+    "large": "assets/images/large.jpg",
+    "small": "assets/images/small.png"
   },
   "author": {
     "name": "Robin Bolscher",
     "email": "robin@athom.nl"
   },
-  "permissions": [
-    "homey:manager:speech-output",
-    "homey:manager:speech-ledring",
-    "homey:manager:flow"
-  ],
   "speech": [
-    {
-      "id": "hello",
-      "importance": 0.6,
-      "synonyms": {
-        "en": [
-          "hello",
-          "hi",
-          "hey"
-        ]
-      }
-    }
   ],
   "drivers": [
     {
       "id": "lifx",
       "name": {
-        "en": "LIFX"
+        "en": "LIFX",
+        "nl": "LIFX"
       },
       "class": "light",
       "capabilities": [
-        "name",
-        "onoff"
+        "onoff",
+        "hue",
+        "brightness",
+        "saturation",
+        "temperature"
       ],
+      "images": {
+        "large": "drivers/lifx/assets/images/large.jpg",
+        "small": "drivers/lifx/assets/images/small.jpg"
+      },
       "pair": [
         {
-          "id": "list_devices",
+          "id": "list_bulbs",
           "template": "list_devices",
           "navigation": {
-            "next": "add_bulb"
+            "next": "add_bulbs"
           }
         },
         {
-          "id": "add_bulb",
+          "id": "add_bulbs",
           "template": "add_devices"
         }
       ]
     }
   ],
   "dependencies": {
-    "lifx": "*"
+    "node-lifx": "*"
   },
   "flow": {
-    "actions": [
-      {
-        "id": "on",
-        "title": {
-          "en": "Turn lights on",
-          "nl": "Zet lampen aan"
-        },
-        "args": [
-          {
-            "name": "device",
-            "type": "device",
-            "placeholder": { "en": "Which light bulb", "nl": "Welke lamp" }
-          }
-        ]
-      },
-      {
-        "id": "off",
-        "title": {
-          "en": "Turn lights off",
-          "nl": "Zet lampen uit"
-        },
-        "args": [
-          {
-            "name": "device",
-            "type": "device",
-            "placeholder": { "en": "Which light bulb", "nl": "Welke lamp" }
-          }
-        ]
-      },
-      {
-        //TODO color flow should be split to hue/saturation/temperature/onoff?
-        "id": "color",
-        "title": {
-          "en": "Set light color to",
-          "nl": "Stel kleur van lampen in"
-        },
-        "args": [
-          {
-            "name": "bulb_color",
-            "type": "color"
-          }
-        ]
-      }
-    ]
   }
 }
