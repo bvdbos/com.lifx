@@ -17,9 +17,14 @@ var temp_lights = [];
  * @param callback
  */
 module.exports.init = function ( devices_data, callback ) {
-
+    
     // Initialize new Lifx client
     client.init();
+
+    // If client fails, destroy it
+    client.on('error', function() {
+        client.destroy();
+    });
 
     // Loop bulbs found by Lifx
     client.on('light-new', function ( light ) {
@@ -152,7 +157,6 @@ module.exports.capabilities = {
             light.data.client.getState( function ( error, data ) {
 
                 // Change light color
-                console.log(hue);
                 light.data.client.color( mapRange( hue, 0, 100, 0, 360 ), data.color.saturation, data.color.brightness );
 
                 if ( callback ) callback( hue );
