@@ -11,6 +11,7 @@ var globalSettings = {
 
 var lights = [];
 var temp_lights = [];
+
 /***
  * Initially start Lifx client to search for bulbs on the network
  * @param devices (already installed)
