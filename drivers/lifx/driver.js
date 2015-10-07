@@ -17,7 +17,7 @@ var temp_lights = [];
  * @param callback
  */
 module.exports.init = function ( devices_data, callback ) {
-    
+
     // Initialize new Lifx client
     client.init();
 
