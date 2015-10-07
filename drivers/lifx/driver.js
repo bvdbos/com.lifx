@@ -111,7 +111,7 @@ module.exports.capabilities = {
                 var state = ( data.power === 1 ) ? true : false;
 
                 // Return current bulb state
-                if ( callback ) callback( state );
+                if ( callback ) callback( error, state );
             });
         },
         set: function ( device_data, onoff, callback ) {
@@ -124,7 +124,7 @@ module.exports.capabilities = {
                 light.data.client.on( globalSettings.duration );
 
                 // Let know that bulb is turned on
-                callback( true );
+                callback( null, true );
             }
             else {
 
@@ -132,7 +132,7 @@ module.exports.capabilities = {
                 light.data.client.off( globalSettings.duration );
 
                 // Let know that bulb is turned off
-                callback( false );
+                callback( null, false );
             }
         }
     },
@@ -147,7 +147,7 @@ module.exports.capabilities = {
             light.data.client.getState( function ( error, data ) {
 
                 // Return mapped hue
-                if ( callback ) callback( mapRange( data.color.hue, 0, 360, 0, 100 ) );
+                if ( callback ) callback( error, mapRange( data.color.hue, 0, 360, 0, 100 ) );
             } );
         },
         set: function ( device_data, hue, callback ) {
@@ -160,7 +160,7 @@ module.exports.capabilities = {
                 // Change light color
                 light.data.client.color( mapRange( hue, 0, 100, 0, 360 ), data.color.saturation, data.color.brightness );
 
-                if ( callback ) callback( hue );
+                if ( callback ) callback( error, hue );
             } );
         }
     },
@@ -175,7 +175,7 @@ module.exports.capabilities = {
             light.data.client.getState( function ( error, data ) {
 
                 // Return saturation
-                if ( callback ) callback( data.color.saturation );
+                if ( callback ) callback( error, data.color.saturation );
             } );
         },
         set: function ( device_data, saturation, callback ) {
@@ -188,7 +188,7 @@ module.exports.capabilities = {
                 // Change light color
                 light.data.client.color( data.color.hue, saturation, data.color.brightness );
 
-                if ( callback ) callback( saturation );
+                if ( callback ) callback( error, saturation );
             } );
         }
     },
@@ -203,7 +203,7 @@ module.exports.capabilities = {
             light.data.client.getState( function ( error, data ) {
 
                 // Return brightness
-                if ( callback ) callback( data.color.brightness );
+                if ( callback ) callback( error, data.color.brightness );
             } );
         },
         set: function ( device_data, brightness, callback ) {
@@ -216,7 +216,7 @@ module.exports.capabilities = {
                 // Change light color
                 light.data.client.color( data.color.hue, data.color.saturation, brightness );
 
-                if ( callback ) callback( brightness );
+                if ( callback ) callback( error, brightness );
             } );
         }
     },
@@ -231,7 +231,7 @@ module.exports.capabilities = {
             light.data.client.getState( function ( error, data ) {
 
                 // Return mapped kelvin value
-                if ( callback ) callback( mapRange( data.color.kelvin, 2500, 9000, 0, 100 ) );
+                if ( callback ) callback( error, mapRange( data.color.kelvin, 2500, 9000, 0, 100 ) );
             } );
         },
         set: function ( device_data, temperature, callback ) {
@@ -244,7 +244,7 @@ module.exports.capabilities = {
                 // Convert temperature to usable range for Lifx and update temperature
                 light.data.client.color( data.color.hue, data.color.saturation, data.color.brightness, mapRange( temperature, 0, 100, 2500, 9000 ) );
 
-                if ( callback ) callback( temperature );
+                if ( callback ) callback( error, temperature );
             } );
         }
     }
