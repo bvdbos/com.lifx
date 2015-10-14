@@ -1,4 +1,4 @@
-var _ = require('underscore');
+var _ = require( 'underscore' );
 var Lifx = require( 'node-lifx' ).Client;
 var client = new Lifx();
 
@@ -23,28 +23,30 @@ module.exports.init = function ( devices_data, callback ) {
     client.init();
 
     // If client fails, destroy it
-    client.on('error', function() {
+    client.on( 'error', function () {
         client.destroy();
-    });
+    } );
 
     // Loop bulbs found by Lifx
-    client.on('light-new', function ( light ) {
+    client.on( 'light-new', function ( light ) {
 
         // Get more data about the light
         light.getState( function ( error, data ) {
 
             // Check if device was installed before
-            var devices = (_.findWhere(devices_data, {id: light.id})) ? lights : temp_lights;
+            var lists = (_.findWhere( devices_data, { id: light.id } )) ? [lights, temp_lights] : [temp_lights];
 
-            // Add them to create devices array
-            devices.push( {
-                data: {
-                    id: light.id,
-                    client: light,
-                    status: light.status
-                },
-                name: data.label
-            } );
+            lists.forEach(function (list) {
+                // Add them to create devices array
+                list.push( {
+                    data: {
+                        id: light.id,
+                        client: light,
+                        status: light.status
+                    },
+                    name: data.label
+                } );
+            });
         } )
     } );
 
@@ -62,33 +64,34 @@ module.exports.pair = {
      * Constructs array of all available devices
      */
     list_devices: function ( callback ) {
+
         var devices = [];
-        temp_lights.forEach(function (temp_light){
-            devices.push({
+        temp_lights.forEach( function ( temp_light ) {
+            devices.push( {
                 data: {
                     id: temp_light.data.id
                 },
                 name: temp_light.name
-            });
-        });
+            } );
+        } );
 
-        callback(devices);
+        callback( devices );
     },
 
-    add_device: function (callback, emit, device){
+    add_device: function ( callback, emit, device ) {
 
-        temp_lights.forEach(function(temp_light){
-            if(temp_light.data.id === device.data.id){
-                lights.push({
+        temp_lights.forEach( function ( temp_light ) {
+            if ( temp_light.data.id === device.data.id ) {
+                lights.push( {
                     data: {
                         id: temp_light.data.id,
                         client: temp_light.data.client,
                         status: temp_light.data.status
                     },
                     name: temp_light.name
-                });
+                } );
             }
-        });
+        } );
     }
 
 };
@@ -107,12 +110,19 @@ module.exports.capabilities = {
             // Get more information about light
             light.data.client.getState( function ( error, data ) {
 
-                // Determine on/off state
-                var state = ( data.power === 1 ) ? true : false;
+                // If error return immediately
+                if ( error ) {
+                    return callback( error, null );
+                }
+                else if ( typeof data === "object" ) {
 
-                // Return current bulb state
-                if ( callback ) callback( error, state );
-            });
+                    // Determine on/off state
+                    var state = ( data.power === 1 ) ? true : false;
+
+                    // Return current bulb state
+                    if ( callback ) callback( error, state );
+                }
+            } );
         },
         set: function ( device_data, onoff, callback ) {
 
@@ -146,8 +156,15 @@ module.exports.capabilities = {
             // Get more information about light
             light.data.client.getState( function ( error, data ) {
 
-                // Return mapped hue
-                if ( callback ) callback( error, mapRange( data.color.hue, 0, 360, 0, 100 ) );
+                // If error return immediately
+                if ( error ) {
+                    return callback( error, null );
+                }
+                else if ( typeof data === "object" ) {
+
+                    // Return mapped hue
+                    if ( callback ) callback( error, mapRange( data.color.hue, 0, 360, 0, 100 ) );
+                }
             } );
         },
         set: function ( device_data, hue, callback ) {
@@ -157,10 +174,17 @@ module.exports.capabilities = {
             // Get more information about light
             light.data.client.getState( function ( error, data ) {
 
-                // Change light color
-                light.data.client.color( mapRange( hue, 0, 100, 0, 360 ), data.color.saturation, data.color.brightness );
+                // If error return immediately
+                if ( error ) {
+                    return callback( error, null );
+                }
+                else if ( typeof data === "object" ) {
 
-                if ( callback ) callback( error, hue );
+                    // Change light color
+                    light.data.client.color( mapRange( hue, 0, 100, 0, 360 ), data.color.saturation, data.color.brightness );
+
+                    if ( callback ) callback( error, hue );
+                }
             } );
         }
     },
@@ -174,8 +198,15 @@ module.exports.capabilities = {
             // Get more information about light
             light.data.client.getState( function ( error, data ) {
 
-                // Return saturation
-                if ( callback ) callback( error, data.color.saturation );
+                // If error return immediately
+                if ( error ) {
+                    return callback( error, null );
+                }
+                else if ( typeof data === "object" ) {
+
+                    // Return saturation
+                    if ( callback ) callback( error, data.color.saturation );
+                }
             } );
         },
         set: function ( device_data, saturation, callback ) {
@@ -185,10 +216,17 @@ module.exports.capabilities = {
             // Get more information about light
             light.data.client.getState( function ( error, data ) {
 
-                // Change light color
-                light.data.client.color( data.color.hue, saturation, data.color.brightness );
+                // If error return immediately
+                if ( error ) {
+                    return callback( error, null );
+                }
+                else if ( typeof data === "object" ) {
 
-                if ( callback ) callback( error, saturation );
+                    // Change light color
+                    light.data.client.color( data.color.hue, saturation, data.color.brightness );
+
+                    if ( callback ) callback( error, saturation );
+                }
             } );
         }
     },
@@ -202,8 +240,15 @@ module.exports.capabilities = {
             // Get more information about light
             light.data.client.getState( function ( error, data ) {
 
-                // Return brightness
-                if ( callback ) callback( error, data.color.brightness );
+                // If error return immediately
+                if ( error ) {
+                    return callback( error, null );
+                }
+                else if ( typeof data === "object" ) {
+
+                    // Return brightness
+                    if ( callback ) callback( error, data.color.brightness );
+                }
             } );
         },
         set: function ( device_data, brightness, callback ) {
@@ -213,10 +258,17 @@ module.exports.capabilities = {
             // Get more information about light
             light.data.client.getState( function ( error, data ) {
 
-                // Change light color
-                light.data.client.color( data.color.hue, data.color.saturation, brightness );
+                // If error return immediately
+                if ( error ) {
+                    return callback( error, null );
+                }
+                else if ( typeof data === "object" ) {
 
-                if ( callback ) callback( error, brightness );
+                    // Change light color
+                    light.data.client.color( data.color.hue, data.color.saturation, brightness );
+
+                    if ( callback ) callback( error, brightness );
+                }
             } );
         }
     },
@@ -230,8 +282,15 @@ module.exports.capabilities = {
             // Get more information about light
             light.data.client.getState( function ( error, data ) {
 
-                // Return mapped kelvin value
-                if ( callback ) callback( error, mapRange( data.color.kelvin, 2500, 9000, 0, 100 ) );
+                // If error return immediately
+                if ( error ) {
+                    return callback( error, null );
+                }
+                else if ( typeof data === "object" ) {
+
+                    // Return mapped kelvin value
+                    if ( callback ) callback( error, mapRange( data.color.kelvin, 2500, 9000, 0, 100 ) );
+                }
             } );
         },
         set: function ( device_data, temperature, callback ) {
@@ -241,12 +300,46 @@ module.exports.capabilities = {
             // Get more information about light
             light.data.client.getState( function ( error, data ) {
 
-                // Convert temperature to usable range for Lifx and update temperature
-                light.data.client.color( data.color.hue, data.color.saturation, data.color.brightness, mapRange( temperature, 0, 100, 2500, 9000 ) );
+                // If error return immediately
+                if ( error ) {
+                    return callback( error, null );
+                }
+                else if ( typeof data === "object" ) {
 
-                if ( callback ) callback( error, temperature );
+                    // Convert temperature to usable range for Lifx and update temperature
+                    light.data.client.color( data.color.hue, data.color.saturation, data.color.brightness, mapRange( temperature, 0, 100, 2500, 9000 ) );
+
+                    if ( callback ) callback( error, temperature );
+                }
             } );
         }
+    }
+};
+
+/**
+ * When a device is renamed in Homey, make sure the actual
+ * label of the device is changed as well
+ * @param device_data
+ * @param new_name
+ */
+module.exports.renamed = function ( device_data, new_name ) {
+
+    // Check for valid new name
+    if ( typeof device_data === "object" && typeof new_name === "string" && new_name !== '' ) {
+
+        // Parse new label
+        var label = new_name.substring( 0, 11 ).trim();
+
+        // Get light targeted
+        var light = getLight( device_data.id );
+        var temp_light = getLight( device_data.id, temp_lights );
+
+        // Store new name internally
+        if ( light ) light.name = label;
+        if ( temp_light ) temp_light.name = label;
+
+        // Set new label with a max of 11 characters (LIFX limit)
+        if ( light ) light.data.client.setLabel( label );
     }
 };
 
@@ -263,12 +356,13 @@ function mapRange ( value, low1, high1, low2, high2 ) {
     return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
 }
 
-function getLight ( device_id ) {
+function getLight ( device_id, list ) {
     var found_light = null;
-    lights.forEach(function(light){
-        if(light.data.id === device_id){
+    var list = (list) ? list : lights;
+    list.forEach( function ( light ) {
+        if ( light.data.id === device_id ) {
             found_light = light;
         }
-    });
+    } );
     return found_light;
 }
