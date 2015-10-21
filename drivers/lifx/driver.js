@@ -1,4 +1,5 @@
 var _ = require( 'underscore' );
+var Cutter = require('utf8-binary-cutter');
 var Lifx = require( 'node-lifx' ).Client;
 var client = new Lifx();
 
@@ -413,8 +414,8 @@ module.exports.renamed = function ( device_data, new_name ) {
     // Check for valid new name
     if ( typeof device_data === "object" && typeof new_name === "string" && new_name !== '' ) {
 
-        // Parse new label
-        var label = new_name.substring( 0, 11 ).trim();
+        // Parse new label and truncate at 32 bytes
+        var label = Cutter.truncateToBinarySize( new_name, 32 );
 
         // Get light targeted
         var light = getLight( device_data.id );
@@ -424,7 +425,7 @@ module.exports.renamed = function ( device_data, new_name ) {
         if ( light ) light.name = label;
         if ( temp_light ) temp_light.name = label;
 
-        // Set new label with a max of 11 characters (LIFX limit)
+        // Set new label with a max of 32 bytes (LIFX limit)
         if ( light ) light.data.client.setLabel( label );
     }
 };
