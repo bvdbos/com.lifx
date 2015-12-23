@@ -20,9 +20,6 @@ var temp_lights = [];
  */
 module.exports.init = function ( devices_data, callback ) {
 
-    // Initialize new Lifx client
-    client.init();
-
     // If client fails, destroy it
     client.on( 'error', function () {
         client.destroy();
@@ -57,6 +54,9 @@ module.exports.init = function ( devices_data, callback ) {
         } )
     } );
 
+	// Initialize new Lifx client
+	client.init();
+
     // Ready
     callback( true );
 };
@@ -74,7 +74,7 @@ module.exports.pair = function (socket) {
     socket.on("list_devices", function ( data, callback ) {
 
         var devices = [];
-        temp_lights.forEach( function ( temp_light ) {
+		temp_lights.forEach( function ( temp_light ) {
             devices.push( {
                 data: {
                     id: temp_light.data.id
@@ -83,7 +83,7 @@ module.exports.pair = function (socket) {
             } );
         } );
 
-        callback( devices );
+        callback( null, devices );
     });
 
     /**
