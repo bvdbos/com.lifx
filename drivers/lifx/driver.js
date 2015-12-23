@@ -65,13 +65,13 @@ module.exports.init = function ( devices_data, callback ) {
  * Pairing process that calls list_devices when in need of all devices
  * Lifx can find, here the devices array is built and send to the front-end
  */
-module.exports.pair = {
+module.exports.pair = function (socket) {
 
     /**
      * Constructs array of all available devices
      * @param callback
      */
-    list_devices: function ( callback ) {
+    socket.on("list_devices", function ( data, callback ) {
 
         var devices = [];
         temp_lights.forEach( function ( temp_light ) {
@@ -84,7 +84,7 @@ module.exports.pair = {
         } );
 
         callback( devices );
-    },
+    });
 
     /**
      * Register device internally as installed
@@ -92,7 +92,7 @@ module.exports.pair = {
      * @param emit
      * @param device
      */
-    add_device: function ( callback, emit, device ) {
+    socket.on("add_device", function ( device, callback ) {
 
         temp_lights.forEach( function ( temp_light ) {
             if ( temp_light.data.id === device.data.id ) {
@@ -106,7 +106,7 @@ module.exports.pair = {
                 } );
             }
         } );
-    }
+    });
 };
 
 /**
