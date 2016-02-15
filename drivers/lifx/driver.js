@@ -27,7 +27,7 @@ module.exports.init = function (devices_data, callback) {
 
 	// Loop bulbs found by Lifx
 	client.on('light-new', function (light) {
-
+		console.log("new light");
 		// Get more data about the light
 		light.getState(function (error, data) {
 
@@ -54,6 +54,32 @@ module.exports.init = function (devices_data, callback) {
 		})
 	});
 
+	// Light goes offline
+	client.on('light-offline', function (light) {
+
+		// Get light
+		var foundLight = getLight(light.id, temp_lights);
+
+		// If it exists
+		if (foundLight) {
+			foundLight.data.status = "off";
+			module.exports.setUnavailable({id: light.id}, __("offline"));
+		}
+	});
+
+	// Light gets back online
+	client.on('light-online', function (light) {
+
+		// Get light
+		var foundLight = getLight(light.id, temp_lights);
+
+		// If it exists
+		if (foundLight) {
+			foundLight.data.status = "on";
+			module.exports.setAvailable({id: light.id});
+		}
+	});
+
 	// Initialize new Lifx client
 	client.init();
 
@@ -74,12 +100,14 @@ module.exports.pair = function (socket) {
 	socket.on("list_devices", function (data, callback) {
 		var devices = [];
 		temp_lights.forEach(function (temp_light) {
-			devices.push({
-				data: {
-					id: temp_light.data.id
-				},
-				name: temp_light.name
-			});
+			if (temp_light.data.status == "on") {
+				devices.push({
+					data: {
+						id: temp_light.data.id
+					},
+					name: temp_light.name
+				});
+			}
 		});
 
 		callback(null, devices);
