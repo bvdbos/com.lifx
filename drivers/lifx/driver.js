@@ -118,7 +118,7 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object") {
+			if (typeof light === "object" && light.data && light.data.client) {
 
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
@@ -173,7 +173,7 @@ module.exports.capabilities = {
 		}
 	},
 
-	hue: {
+	light_hue: {
 		get: function (device_data, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
@@ -188,9 +188,8 @@ module.exports.capabilities = {
 						return callback(error, null);
 					}
 					else if (typeof data === "object") {
-
 						// Return mapped hue
-						if (callback) callback(error, mapRange(data.color.hue, 0, 360, 0, 100));
+						if (callback) callback(error, (data.color.hue / 360));
 					}
 				});
 			}
@@ -216,8 +215,7 @@ module.exports.capabilities = {
 					else if (typeof data === "object") {
 
 						// Change light color
-						light.data.client.color(mapRange(hue, 0, 100, 0, 360), data.color.saturation, data.color.brightness);
-
+						light.data.client.color(Math.round(hue * 360), data.color.saturation, data.color.brightness);
 						if (callback) callback(error, hue);
 					}
 				});
@@ -229,8 +227,7 @@ module.exports.capabilities = {
 			}
 		}
 	},
-
-	saturation: {
+	light_saturation: {
 		get: function (device_data, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
@@ -273,7 +270,7 @@ module.exports.capabilities = {
 					else if (typeof data === "object") {
 
 						// Change light color
-						light.data.client.color(data.color.hue, saturation, data.color.brightness);
+						light.data.client.color(data.color.hue, saturation * 100, data.color.brightness);
 
 						if (callback) callback(error, saturation);
 					}
@@ -287,7 +284,7 @@ module.exports.capabilities = {
 		}
 	},
 
-	brightness: {
+	dim: {
 		get: function (device_data, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
@@ -302,7 +299,6 @@ module.exports.capabilities = {
 						return callback(error, null);
 					}
 					else if (typeof data === "object") {
-
 						// Return brightness
 						if (callback) callback(error, data.color.brightness);
 					}
@@ -330,8 +326,7 @@ module.exports.capabilities = {
 					else if (typeof data === "object") {
 
 						// Change light color
-						light.data.client.color(data.color.hue, data.color.saturation, brightness);
-
+						light.data.client.color(data.color.hue, data.color.saturation, brightness * 100);
 						if (callback) callback(error, brightness);
 					}
 				});
@@ -344,7 +339,7 @@ module.exports.capabilities = {
 		}
 	},
 
-	temperature: {
+	light_temperature: {
 		get: function (device_data, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
@@ -361,7 +356,7 @@ module.exports.capabilities = {
 					else if (typeof data === "object") {
 
 						// Return mapped kelvin value
-						if (callback) callback(error, mapRange(data.color.kelvin, 2500, 9000, 0, 100));
+						if (callback) callback(error, ((data.color.kelvin - 2500) / (9000 - 2500) * (1 - 0)));
 					}
 				});
 			}
@@ -387,7 +382,7 @@ module.exports.capabilities = {
 					else if (typeof data === "object") {
 
 						// Convert temperature to usable range for Lifx and update temperature
-						light.data.client.color(data.color.hue, data.color.saturation, data.color.brightness, mapRange(temperature, 0, 100, 2500, 9000));
+						light.data.client.color(data.color.hue, data.color.saturation, data.color.brightness, (temperature - 0) / (1 - 0) * (9000 - 2500) + 2500);
 
 						if (callback) callback(error, temperature);
 					}
@@ -428,19 +423,6 @@ module.exports.renamed = function (device_data, new_name) {
 		if (light) light.data.client.setLabel(label);
 	}
 };
-
-/**
- * Util function that maps values between ranges
- * @param value
- * @param low1
- * @param high1
- * @param low2
- * @param high2
- * @returns {*}
- */
-function mapRange(value, low1, high1, low2, high2) {
-	return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
-}
 
 /**
  * Gets a light from one of the internal device arrays
