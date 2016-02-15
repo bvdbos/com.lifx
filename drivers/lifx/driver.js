@@ -27,7 +27,7 @@ module.exports.init = function (devices_data, callback) {
 
 	// Loop bulbs found by Lifx
 	client.on('light-new', function (light) {
-		console.log("new light");
+
 		// Get more data about the light
 		light.getState(function (error, data) {
 
@@ -272,7 +272,7 @@ module.exports.capabilities = {
 					else if (typeof data === "object") {
 
 						// Return saturation
-						if (callback) callback(error, data.color.saturation);
+						if (callback) callback(error, (data.color.saturation/100));
 					}
 				});
 			}
@@ -328,7 +328,7 @@ module.exports.capabilities = {
 					}
 					else if (typeof data === "object") {
 						// Return brightness
-						if (callback) callback(error, data.color.brightness);
+						if (callback) callback(error, (data.color.brightness/100));
 					}
 				});
 			}
