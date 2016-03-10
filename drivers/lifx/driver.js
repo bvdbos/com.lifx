@@ -13,7 +13,7 @@ var globalSettings = {
 var lights = [];
 var temp_lights = [];
 
-/***
+/**
  * Initially start Lifx client to search for bulbs on the network
  * @param devices (already installed)
  * @param callback
@@ -32,7 +32,7 @@ module.exports.init = function (devices_data, callback) {
 		light.getState(function (error, data) {
 
 			// If no data available skip this one
-			if (!error && typeof data === "object") {
+			if (!error && data != null) {
 
 				// Check if device was installed before
 				var lists = (_.findWhere(devices_data, {id: light.id})) ? [lights, temp_lights] : [temp_lights];
@@ -61,7 +61,7 @@ module.exports.init = function (devices_data, callback) {
 		var foundLight = getLight(light.id, temp_lights);
 
 		// If it exists
-		if (foundLight) {
+		if (foundLight != null && foundLight.data != null) {
 			foundLight.data.status = "off";
 			module.exports.setUnavailable({id: light.id}, __("offline"));
 		}
@@ -74,7 +74,7 @@ module.exports.init = function (devices_data, callback) {
 		var foundLight = getLight(light.id, temp_lights);
 
 		// If it exists
-		if (foundLight) {
+		if (foundLight != null && foundLight.data != null) {
 			foundLight.data.status = "on";
 			module.exports.setAvailable({id: light.id});
 		}
@@ -146,16 +146,16 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object" && light.data && light.data.client) {
+			if (light != null && light.data != null && light.data.client != null) {
 
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
 
 					// If error return immediately
 					if (error) {
-						return callback(error, null);
+						callback(error, null);
 					}
-					else if (typeof data === "object") {
+					else if (data != null) {
 
 						// Determine on/off state
 						var state = ( data.power === 1 ) ? true : false;
@@ -175,7 +175,7 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object") {
+			if (light != null && light.data != null && light.data.client != null) {
 				if (onoff) {
 
 					// Turn bulb on with global duration setting
@@ -206,7 +206,7 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object") {
+			if (light != null && light.data != null && light.data.client != null) {
 
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
@@ -231,7 +231,7 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object") {
+			if (light != null && light.data != null && light.data.client != null) {
 
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
@@ -260,7 +260,7 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object") {
+			if (light != null && light.data != null && light.data.client != null) {
 
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
@@ -272,7 +272,7 @@ module.exports.capabilities = {
 					else if (typeof data === "object") {
 
 						// Return saturation
-						if (callback) callback(error, (data.color.saturation/100));
+						if (callback) callback(error, (data.color.saturation / 100));
 					}
 				});
 			}
@@ -286,7 +286,7 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object") {
+			if (light != null && light.data != null && light.data.client != null) {
 
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
@@ -317,7 +317,7 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object") {
+			if (light != null && light.data != null && light.data.client != null) {
 
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
@@ -328,7 +328,7 @@ module.exports.capabilities = {
 					}
 					else if (typeof data === "object") {
 						// Return brightness
-						if (callback) callback(error, (data.color.brightness/100));
+						if (callback) callback(error, (data.color.brightness / 100));
 					}
 				});
 			}
@@ -342,7 +342,7 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object") {
+			if (light != null && light.data != null && light.data.client != null) {
 
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
@@ -372,7 +372,7 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object") {
+			if (light != null && light.data != null && light.data.client != null) {
 
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
@@ -398,7 +398,7 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (typeof light === "object") {
+			if (light != null && light.data != null && light.data.client != null) {
 
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
