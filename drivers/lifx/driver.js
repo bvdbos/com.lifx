@@ -181,6 +181,9 @@ module.exports.capabilities = {
 					// Turn bulb on with global duration setting
 					light.data.client.on(globalSettings.duration);
 
+					// Emit realtime event to register change in mobile card
+					module.exports.realtime(device_data, 'onoff', true);
+
 					// Let know that bulb is turned on
 					callback(null, true);
 				}
@@ -188,6 +191,9 @@ module.exports.capabilities = {
 
 					// Turn bulb off with global duration setting
 					light.data.client.off(globalSettings.duration);
+
+					// Emit realtime event to register change in mobile card
+					module.exports.realtime(device_data, 'onoff', false);
 
 					// Let know that bulb is turned off
 					callback(null, false);
@@ -244,6 +250,10 @@ module.exports.capabilities = {
 
 						// Change light color
 						light.data.client.color(Math.round(hue * 360), data.color.saturation, data.color.brightness);
+
+						// Emit realtime event to register change in mobile card
+						module.exports.realtime(device_data, 'light_hue', hue);
+
 						if (callback) callback(error, hue);
 					}
 				});
@@ -300,6 +310,9 @@ module.exports.capabilities = {
 						// Change light color
 						light.data.client.color(data.color.hue, saturation * 100, data.color.brightness);
 
+						// Emit realtime event to register change in mobile card
+						module.exports.realtime(device_data, 'light_saturation', saturation);
+
 						if (callback) callback(error, saturation);
 					}
 				});
@@ -355,6 +368,10 @@ module.exports.capabilities = {
 
 						// Change light color
 						light.data.client.color(data.color.hue, data.color.saturation, brightness * 100);
+
+						// Emit realtime event to register change in mobile card
+						module.exports.realtime(device_data, 'dim', brightness);
+
 						if (callback) callback(error, brightness);
 					}
 				});
@@ -411,6 +428,9 @@ module.exports.capabilities = {
 
 						// Convert temperature to usable range for Lifx and update temperature
 						light.data.client.color(data.color.hue, data.color.saturation, data.color.brightness, (temperature - 0) / (1 - 0) * (9000 - 2500) + 2500);
+
+						// Emit realtime event to register change in mobile card
+						module.exports.realtime(device_data, 'light_temperature', temperature);
 
 						if (callback) callback(error, temperature);
 					}
