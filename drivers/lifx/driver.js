@@ -41,14 +41,28 @@ module.exports.init = function (devices_data, callback) {
 				lists.forEach(function (list) {
 
 					// Add device including all data
-					list.push({
+					var temp_device = {
 						data: {
 							id: light.id,
 							client: light,
 							status: light.status
 						},
 						name: data.label
+					};
+
+					// Get more information about light
+					temp_device.data.client.getState(function (error, data) {
+						if (data != null) {
+
+							// Store initial values
+							temp_device.data.temperature = data.color.kelvin;
+							temp_device.data.brightness = data.color.brightness;
+							temp_device.data.saturation = data.color.saturation;
+							temp_device.data.hue = data.color.hue;
+						}
 					});
+
+					list.push(temp_device);
 				});
 			}
 		})
@@ -123,14 +137,28 @@ module.exports.pair = function (socket) {
 
 		temp_lights.forEach(function (temp_light) {
 			if (temp_light.data.id === device.data.id) {
-				lights.push({
+				var light = {
 					data: {
 						id: temp_light.data.id,
 						client: temp_light.data.client,
 						status: temp_light.data.status
 					},
 					name: temp_light.name
+				};
+
+				// Get more information about light
+				light.data.client.getState(function (error, data) {
+					if (data != null) {
+
+						// Store initial values
+						light.data.temperature = data.color.kelvin;
+						light.data.brightness = data.color.brightness;
+						light.data.saturation = data.color.saturation;
+						light.data.hue = data.color.hue;
+					}
 				});
+
+				lights.push(light);
 			}
 		});
 	});
@@ -321,7 +349,7 @@ module.exports.capabilities = {
 						light.data.saturation = saturation * 100;
 
 						// Change light color
-						light.data.client.color(light.data.hue, saturation * 100, light.data.brightness);
+						light.data.client.color(light.data.hue, light.data.saturation, light.data.brightness);
 
 						// Emit realtime event to register change in mobile card
 						module.exports.realtime(device_data, 'light_saturation', saturation);
