@@ -55,7 +55,8 @@ module.exports.init = function (devices_data, callback) {
 						if (data != null) {
 
 							// Store initial values
-							temp_device.data.light_temperature = (data.color.kelvin - 2500) / (9000 - 2500) * (1 - 0);
+
+							temp_device.data.light_temperature = map(2500, 9000, 0, 1, data.color.kelvin);
 							temp_device.data.dim = data.color.brightness / 100;
 							temp_device.data.light_saturation = data.color.saturation / 100;
 							temp_device.data.light_hue = data.color.hue / 360;
@@ -151,7 +152,7 @@ module.exports.pair = function (socket) {
 					if (data != null) {
 
 						// Store initial values
-						light.data.light_temperature = (data.color.kelvin - 2500) / (9000 - 2500) * (1 - 0);
+						light.data.light_temperature = map(2500, 9000, 0, 1, data.color.kelvin);
 						light.data.dim = data.color.brightness / 100;
 						light.data.light_saturation = data.color.saturation / 100;
 						light.data.light_hue = data.color.hue / 360;
@@ -283,6 +284,9 @@ module.exports.capabilities = {
 						// Store light_hue
 						light.data.light_hue = light_hue;
 
+						// Toggle color mode
+						if(light_hue > 0) light.data.light_mode = "color";
+
 						// Update bulb state
 						update(light.data.id, "light_hue", function (err) {
 							callback(err, light_hue)
@@ -344,6 +348,9 @@ module.exports.capabilities = {
 
 						// Store light_saturation
 						light.data.light_saturation = light_saturation;
+
+						// Toggle color mode
+						if(light_saturation > 0) light.data.light_mode = "color";
 
 						// Update bulb state
 						update(light.data.id, "light_saturation", function (err) {
@@ -440,7 +447,7 @@ module.exports.capabilities = {
 					else if (typeof data === "object") {
 
 						// Store light_temperature
-						light.data.light_temperature = (data.color.kelvin - 2500) / (9000 - 2500) * (1 - 0);
+						light.data.light_temperature = map(2500, 9000, 0, 1, data.color.kelvin);
 
 						// Return mapped kelvin value
 						if (callback) callback(error, light.data.light_temperature);
@@ -484,6 +491,33 @@ module.exports.capabilities = {
 				}
 			}
 		}
+	},
+
+	light_mode: {
+		get: function (device_data, callback) {
+			if (device_data instanceof Error) return callback(device_data);
+
+			var light = getLight(device_data.id);
+			if (light != null && light.data != null && light.data.client != null) {
+
+				if (!light.data.light_mode) light.data.light_mode = "color";
+				callback(null, light.data.light_mode);
+			}
+		},
+		set: function (device_data, light_mode, callback) {
+			if (device_data instanceof Error) return callback(device_data);
+
+			var light = getLight(device_data.id);
+			if (light != null && light.data != null && light.data.client != null) {
+
+				light.data.light_mode = light_mode;
+
+				// Update bulb state
+				update(device_data.id, "light_mode", function (err) {
+					callback(err, light.data.light_mode);
+				});
+			}
+		}
 	}
 };
 
@@ -519,8 +553,20 @@ function update(light_id, capability, callback) {
 	// Debounce
 	light.updateTimeout = setTimeout(function () {
 
-		// find bulb id by uniqueid
-		light.data.client.color(Math.round(light.data.light_hue * 360), light.data.light_saturation * 100, light.data.dim * 100, ((light.data.light_temperature - 0) / (1 - 0) * (9000 - 2500) + 2500));
+		// Set hue and saturation
+		var hue = Math.round(light.data.light_hue * 360);
+		var saturation = light.data.light_saturation * 100;
+
+		// If light mode is white
+		if (light.data.light_mode == "temperature") {
+
+			// Set hue and saturation to 0
+			hue = 0;
+			saturation = 0;
+		}
+
+		// Perform update on bulb
+		light.data.client.color(hue, saturation, light.data.dim * 100, map(0, 1, 9000, 2500, light.data.light_temperature));
 
 		// emit event to realtime listeners
 		changedStates.forEach(function (capability) {
@@ -582,4 +628,8 @@ function getLight(device_id, list) {
 		}
 	});
 	return found_light;
+}
+
+function map(input_start, input_end, output_start, output_end, input) {
+	return output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start);
 }

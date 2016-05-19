@@ -1,7 +1,7 @@
 {
   "id": "com.lifx",
-  "version": "1.1.1",
-  "compatibility": ">=0.1.0",
+  "version": "2.0.0",
+  "compatibility": ">=0.8.33",
   "category": "lights",
   "name": {
     "en": "LIFX",
@@ -29,7 +29,7 @@
       },
       "class": "light",
       "capabilities": [
-        "onoff", "dim", "light_hue", "light_saturation", "light_temperature"
+        "onoff", "dim", "light_hue", "light_saturation", "light_temperature", "light_mode"
       ],
       "images": {
         "large": "drivers/lifx/assets/images/large.jpg",
