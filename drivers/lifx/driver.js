@@ -55,10 +55,10 @@ module.exports.init = function (devices_data, callback) {
 						if (data != null) {
 
 							// Store initial values
-							temp_device.data.temperature = data.color.kelvin;
-							temp_device.data.brightness = data.color.brightness;
-							temp_device.data.saturation = data.color.saturation;
-							temp_device.data.hue = data.color.hue;
+							temp_device.data.light_temperature = (data.color.kelvin - 2500) / (9000 - 2500) * (1 - 0);
+							temp_device.data.dim = data.color.brightness / 100;
+							temp_device.data.light_saturation = data.color.saturation / 100;
+							temp_device.data.light_hue = data.color.hue / 360;
 						}
 					});
 
@@ -151,10 +151,10 @@ module.exports.pair = function (socket) {
 					if (data != null) {
 
 						// Store initial values
-						light.data.temperature = data.color.kelvin;
-						light.data.brightness = data.color.brightness;
-						light.data.saturation = data.color.saturation;
-						light.data.hue = data.color.hue;
+						light.data.light_temperature = (data.color.kelvin - 2500) / (9000 - 2500) * (1 - 0);
+						light.data.dim = data.color.brightness / 100;
+						light.data.light_saturation = data.color.saturation / 100;
+						light.data.light_hue = data.color.hue / 360;
 					}
 				});
 
@@ -251,11 +251,11 @@ module.exports.capabilities = {
 					}
 					else if (typeof data === "object") {
 
-						// Store hue
-						light.data.hue = data.color.hue;
+						// Store light_hue
+						light.data.light_hue = data.color.hue / 360;
 
-						// Return mapped hue
-						if (callback) callback(error, (data.color.hue / 360));
+						// Return mapped light_hue
+						if (callback) callback(error, light.data.light_hue);
 					}
 				});
 			}
@@ -265,7 +265,7 @@ module.exports.capabilities = {
 				}
 			}
 		},
-		set: function (device_data, hue, callback) {
+		set: function (device_data, light_hue, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
@@ -280,16 +280,13 @@ module.exports.capabilities = {
 					}
 					else if (typeof data === "object") {
 
-						// Store hue
-						light.data.hue = hue * 360;
+						// Store light_hue
+						light.data.light_hue = light_hue;
 
-						// Change light color
-						light.data.client.color(Math.round(hue * 360), light.data.saturation, light.data.brightness);
-
-						// Emit realtime event to register change in mobile card
-						module.exports.realtime(device_data, 'light_hue', hue);
-
-						if (callback) callback(error, hue);
+						// Update bulb state
+						update(light.data.id, "light_hue", function (err) {
+							callback(err, light_hue)
+						});
 					}
 				});
 			}
@@ -316,11 +313,11 @@ module.exports.capabilities = {
 					}
 					else if (typeof data === "object") {
 
-						// Store saturation
-						light.data.saturation = data.color.saturation;
+						// Store light_saturation
+						light.data.light_saturation = data.color.saturation / 100;
 
-						// Return saturation
-						if (callback) callback(error, (data.color.saturation / 100));
+						// Return light_saturation
+						if (callback) callback(error, light.data.light_saturation);
 					}
 				});
 			}
@@ -330,7 +327,7 @@ module.exports.capabilities = {
 				}
 			}
 		},
-		set: function (device_data, saturation, callback) {
+		set: function (device_data, light_saturation, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
@@ -345,16 +342,13 @@ module.exports.capabilities = {
 					}
 					else if (typeof data === "object") {
 
-						// Store saturation
-						light.data.saturation = saturation * 100;
+						// Store light_saturation
+						light.data.light_saturation = light_saturation;
 
-						// Change light color
-						light.data.client.color(light.data.hue, light.data.saturation, light.data.brightness);
-
-						// Emit realtime event to register change in mobile card
-						module.exports.realtime(device_data, 'light_saturation', saturation);
-
-						if (callback) callback(error, saturation);
+						// Update bulb state
+						update(light.data.id, "light_saturation", function (err) {
+							callback(err, light_saturation);
+						})
 					}
 				});
 			}
@@ -382,11 +376,11 @@ module.exports.capabilities = {
 					}
 					else if (typeof data === "object") {
 
-						// Store brightness
-						light.data.brightness = data.color.brightness;
+						// Store dim
+						light.data.dim = data.color.brightness / 100;
 
-						// Return brightness
-						if (callback) callback(error, (data.color.brightness / 100));
+						// Return dim
+						if (callback) callback(error, light.data.dim);
 					}
 				});
 			}
@@ -396,7 +390,7 @@ module.exports.capabilities = {
 				}
 			}
 		},
-		set: function (device_data, brightness, callback) {
+		set: function (device_data, dim, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
@@ -411,16 +405,13 @@ module.exports.capabilities = {
 					}
 					else if (typeof data === "object") {
 
-						// Store brightness
-						light.data.brightness = brightness * 100;
+						// Store dim
+						light.data.dim = dim;
 
-						// Change light color
-						light.data.client.color(light.data.hue, light.data.saturation, brightness * 100);
-
-						// Emit realtime event to register change in mobile card
-						module.exports.realtime(device_data, 'dim', brightness);
-
-						if (callback) callback(error, brightness);
+						// Update bulb state
+						update(light.data.id, "dim", function (err) {
+							callback(err, dim);
+						})
 					}
 				});
 			}
@@ -448,11 +439,11 @@ module.exports.capabilities = {
 					}
 					else if (typeof data === "object") {
 
-						// Store temperature
-						light.data.temperature = data.color.kelvin;
+						// Store light_temperature
+						light.data.light_temperature = (data.color.kelvin - 2500) / (9000 - 2500) * (1 - 0);
 
 						// Return mapped kelvin value
-						if (callback) callback(error, ((data.color.kelvin - 2500) / (9000 - 2500) * (1 - 0)));
+						if (callback) callback(error, light.data.light_temperature);
 					}
 				});
 			}
@@ -462,7 +453,7 @@ module.exports.capabilities = {
 				}
 			}
 		},
-		set: function (device_data, temperature, callback) {
+		set: function (device_data, light_temperature, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
@@ -477,16 +468,13 @@ module.exports.capabilities = {
 					}
 					else if (typeof data === "object") {
 
-						// Store temperature
-						light.data.temperature = (temperature - 0) / (1 - 0) * (9000 - 2500) + 2500;
+						// Store light_temperature
+						light.data.light_temperature = light_temperature;
 
-						// Convert temperature to usable range for Lifx and update temperature
-						light.data.client.color(light.data.hue, light.data.saturation, light.data.brightness, (temperature - 0) / (1 - 0) * (9000 - 2500) + 2500);
-
-						// Emit realtime event to register change in mobile card
-						module.exports.realtime(device_data, 'light_temperature', temperature);
-
-						if (callback) callback(error, temperature);
+						// Update bulb state
+						update(light.data.id, "light_temperature", function (err) {
+							callback(err, light_temperature)
+						})
 					}
 				});
 			}
@@ -498,6 +486,58 @@ module.exports.capabilities = {
 		}
 	}
 };
+
+/**
+ * Function that debounces multiple capability changes
+ * @type {Array}
+ */
+var changedStates = [];
+function update(light_id, capability, callback) {
+
+	// Keep track of changed capabilites
+	if (capability) changedStates.push(capability);
+
+	// Get light
+	var light = getLight(light_id);
+	if (!light) {
+		return callback(light, false);
+	}
+	else {
+		callback(null, true);
+	}
+
+	// Clear debounce
+	if (light.updateTimeout) {
+
+		// Clear timeout
+		clearTimeout(light.updateTimeout);
+
+		// Destroy timeout
+		light.updateTimeout = null;
+	}
+
+	// Debounce
+	light.updateTimeout = setTimeout(function () {
+
+		// find bulb id by uniqueid
+		light.data.client.color(Math.round(light.data.light_hue * 360), light.data.light_saturation * 100, light.data.dim * 100, ((light.data.light_temperature - 0) / (1 - 0) * (9000 - 2500) + 2500));
+
+		// emit event to realtime listeners
+		changedStates.forEach(function (capability) {
+
+			// Emit realtime events for changed capabilities
+			module.exports.realtime({
+				id: light.data.id
+			}, capability, light.data[capability]);
+		});
+
+		// Clear changed states
+		changedStates = [];
+
+		// Callback success
+		callback(null, true);
+	}, 150);
+}
 
 /**
  * When a device is renamed in Homey, make sure the actual
