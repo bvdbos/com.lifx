@@ -99,7 +99,7 @@ module.exports.init = function (devices_data, callback) {
 	client.init();
 
 	// Ready
-	callback(true);
+	callback(null, true);
 };
 
 /**
