@@ -12,6 +12,7 @@ var globalSettings = {
 
 var lights = [];
 var temp_lights = [];
+var POLL_INTERVAL = 10000;
 
 /**
  * Initially start Lifx client to search for bulbs on the network
@@ -27,50 +28,85 @@ module.exports.init = function (devices_data, callback) {
 
 	// Loop bulbs found by Lifx
 	client.on('light-new', function (light) {
+		console.log('client light-new', light.id);
 
 		// Get more data about the light
 		light.getState(function (error, data) {
 
+			// Add default label in case this getState call errored
+			var label = __("name");
+
 			// If no data available skip this one
-			if (!error && data != null) {
+			if (!error && data != null) label = data.label;
 
-				// Check if device was installed before
-				var lists = (_.findWhere(devices_data, {id: light.id})) ? [lights, temp_lights] : [temp_lights];
+			// Check if device was installed before
+			var lists = (_.findWhere(devices_data, { id: light.id })) ? [lights, temp_lights] : [temp_lights];
 
-				// Iterate over lists that needs to have device added
-				lists.forEach(function (list) {
+			var pollIntervalSet = false;
+			// Iterate over lists that needs to have device added
+			lists.forEach(function (list) {
 
-					// Add device including all data
-					var temp_device = {
-						data: {
-							id: light.id,
-							client: light,
-							status: light.status
-						},
-						name: data.label
-					};
+				// Add device including all data
+				var temp_device = {
+					data: {
+						id: light.id,
+						client: light,
+						status: light.status
+					},
+					name: label
+				};
 
-					// Get more information about light
-					temp_device.data.client.getState(function (error, data) {
-						if (data != null) {
+				var installedBefore = _.findWhere(devices_data, { id: light.id });
+				if (installedBefore && !pollIntervalSet) {
+					pollIntervalSet = true;
+					clearInterval(temp_device.pollingInterval);
+					temp_device.pollingInterval = setInterval(function () {
+						console.log('poll for new status update')
+						temp_device.data.client.getState(function (err, data) {
+							if (data != null) {
+								console.log('got new data');
+								temp_device.data.onoff = ( data.power === 1 ) ? true : false;
+								module.exports.realtime(installedBefore, 'onoff', temp_device.data.onoff);
 
-							// Store initial values
+								temp_device.data.light_temperature = map(2500, 9000, 0, 1, data.color.kelvin);
+								module.exports.realtime(installedBefore, 'light_temperature', temp_device.data.light_temperature);
 
-							temp_device.data.light_temperature = map(2500, 9000, 0, 1, data.color.kelvin);
-							temp_device.data.dim = data.color.brightness / 100;
-							temp_device.data.light_saturation = data.color.saturation / 100;
-							temp_device.data.light_hue = data.color.hue / 360;
-						}
-					});
+								temp_device.data.dim = data.color.brightness / 100;
+								module.exports.realtime(installedBefore, 'dim', temp_device.data.dim);
 
-					list.push(temp_device);
+								temp_device.data.light_saturation = data.color.saturation / 100;
+								module.exports.realtime(installedBefore, 'light_saturation', temp_device.data.light_saturation);
+
+								temp_device.data.light_hue = data.color.hue / 360;
+								module.exports.realtime(installedBefore, 'light_hue', temp_device.data.light_hue);
+							} else {
+								console.error('received no data', err);
+							}
+						})
+					}, POLL_INTERVAL);
+				}
+
+				// Get more information about light
+				temp_device.data.client.getState(function (error, data) {
+					if (data != null) {
+
+						// Store initial values
+						temp_device.data.onoff = ( data.power === 1 ) ? true : false;
+						temp_device.data.light_temperature = map(2500, 9000, 0, 1, data.color.kelvin);
+						temp_device.data.dim = data.color.brightness / 100;
+						temp_device.data.light_saturation = data.color.saturation / 100;
+						temp_device.data.light_hue = data.color.hue / 360;
+					}
 				});
-			}
+
+				list.push(temp_device);
+			});
 		})
 	});
 
 	// Light goes offline
 	client.on('light-offline', function (light) {
+		console.log('client light-offline', light.id);
 
 		// Get light
 		var foundLight = getLight(light.id, temp_lights);
@@ -78,12 +114,13 @@ module.exports.init = function (devices_data, callback) {
 		// If it exists
 		if (foundLight != null && foundLight.data != null) {
 			foundLight.data.status = "off";
-			module.exports.setUnavailable({id: light.id}, __("offline"));
+			module.exports.setUnavailable({ id: light.id }, __("offline"));
 		}
 	});
 
 	// Light gets back online
 	client.on('light-online', function (light) {
+		console.log('client light-online', light.id);
 
 		// Get light
 		var foundLight = getLight(light.id, temp_lights);
@@ -91,15 +128,32 @@ module.exports.init = function (devices_data, callback) {
 		// If it exists
 		if (foundLight != null && foundLight.data != null) {
 			foundLight.data.status = "on";
-			module.exports.setAvailable({id: light.id});
+			module.exports.setAvailable({ id: light.id });
 		}
 	});
 
 	// Initialize new Lifx client
-	client.init();
+	client.init({
+		lightOfflineTolerance: 5,
+		messageHandlerTimeout: 5000,
+	});
 
 	// Ready
 	callback(null, true);
+};
+
+/**
+ * Add delete handler, to clear the polling interval on removal.
+ * @param deviceData
+ * @param callback
+ * @returns {*}
+ */
+module.exports.deleted = function(deviceData, callback) {
+	console.log('device deleted', deviceData);
+	var light = getLight(deviceData.id);
+	console.log('found deleted light', light.data);
+	clearInterval(light.pollingInterval);
+	return callback(null, true);
 };
 
 /**
@@ -147,11 +201,41 @@ module.exports.pair = function (socket) {
 					name: temp_light.name
 				};
 
+				clearInterval(light.pollingInterval);
+				light.pollingInterval = setInterval(function () {
+					console.log('poll for new status update')
+					light.data.client.getState(function (err, data) {
+						if (data != null) {
+							console.log('got new data');
+
+							light.data.onoff = ( data.power === 1 ) ? true : false;
+							module.exports.realtime(device.data, 'onoff', light.data.onoff);
+
+							light.data.light_temperature = map(2500, 9000, 0, 1, data.color.kelvin);
+							module.exports.realtime(device.data, 'light_temperature', light.data.light_temperature);
+
+							light.data.dim = data.color.brightness / 100;
+							module.exports.realtime(device.data, 'dim', light.data.dim);
+
+							light.data.light_saturation = data.color.saturation / 100;
+							module.exports.realtime(device.data, 'light_saturation', light.data.light_saturation);
+
+							light.data.light_hue = data.color.hue / 360;
+							module.exports.realtime(device.data, 'light_hue', light.data.light_hue);
+
+						} else {
+							console.error('received no data', err);
+						}
+					})
+				}, POLL_INTERVAL);
+
+
 				// Get more information about light
 				light.data.client.getState(function (error, data) {
 					if (data != null) {
 
 						// Store initial values
+						light.data.onoff = ( data.power === 1 ) ? true : false;
 						light.data.light_temperature = map(2500, 9000, 0, 1, data.color.kelvin);
 						light.data.dim = data.color.brightness / 100;
 						light.data.light_saturation = data.color.saturation / 100;
@@ -175,36 +259,18 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (light != null && light.data != null && light.data.client != null) {
-
-				// Get more information about light
-				light.data.client.getState(function (error, data) {
-
-					// If error return immediately
-					if (error) {
-						callback(error, null);
-					}
-					else if (data != null) {
-
-						// Determine on/off state
-						var state = ( data.power === 1 ) ? true : false;
-
-						// Return current bulb state
-						if (callback) callback(error, state);
-					}
-				});
+			if (light != null && light.data != null) {
+				return callback(light.data.onoff);
 			}
-			else {
-				if (typeof callback === "function") {
-					callback(true, false);
-				}
+			else if (typeof callback === "function") {
+				return callback(true, false);
 			}
 		},
 		set: function (device_data, onoff, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (light != null && light.data != null && light.data.client != null) {
+			if (light != null && light.data != null && light.data.client !== null) {
 				if (onoff) {
 
 					// Turn bulb on with global duration setting
@@ -228,10 +294,8 @@ module.exports.capabilities = {
 					callback(null, false);
 				}
 			}
-			else {
-				if (typeof callback === "function") {
-					callback(true, false);
-				}
+			else if (typeof callback === "function") {
+				return callback(true, false);
 			}
 		}
 	},
@@ -241,60 +305,30 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (light != null && light.data != null && light.data.client != null) {
-
-				// Get more information about light
-				light.data.client.getState(function (error, data) {
-
-					// If error return immediately
-					if (error) {
-						return callback(error, null);
-					}
-					else if (typeof data === "object") {
-
-						// Store light_hue
-						light.data.light_hue = data.color.hue / 360;
-
-						// Return mapped light_hue
-						if (callback) callback(error, light.data.light_hue);
-					}
-				});
+			if (light != null && light.data != null) {
+				return callback(light.data.light_hue);
 			}
-			else {
-				if (typeof callback === "function") {
-					callback(true, false);
-				}
+			else if (typeof callback === "function") {
+				return callback(true, false);
 			}
 		},
 		set: function (device_data, light_hue, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (light != null && light.data != null && light.data.client != null) {
+			if (light != null && light.data != null) {
 
-				// Get more information about light
-				light.data.client.getState(function (error, data) {
+				// Store light_hue
+				light.data.light_hue = light_hue;
 
-					// If error return immediately
-					if (error) {
-						return callback(error, null);
-					}
-					else if (typeof data === "object") {
+				// Toggle color mode
+				if (light_hue > 0) light.data.light_mode = "color";
 
-						// Store light_hue
-						light.data.light_hue = light_hue;
-
-						// Toggle color mode
-						if(light_hue > 0) light.data.light_mode = "color";
-
-						// Update bulb state
-						update(light.data.id, "light_hue", function (err) {
-							callback(err, light_hue)
-						});
-					}
+				// Update bulb state
+				update(light.data.id, "light_hue", function (err) {
+					return callback(err, light_hue)
 				});
-			}
-			else {
+			} else {
 				if (typeof callback === "function") {
 					callback(true, false);
 				}
@@ -306,60 +340,30 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (light != null && light.data != null && light.data.client != null) {
-
-				// Get more information about light
-				light.data.client.getState(function (error, data) {
-
-					// If error return immediately
-					if (error) {
-						return callback(error, null);
-					}
-					else if (typeof data === "object") {
-
-						// Store light_saturation
-						light.data.light_saturation = data.color.saturation / 100;
-
-						// Return light_saturation
-						if (callback) callback(error, light.data.light_saturation);
-					}
-				});
+			if (light != null && light.data != null) {
+				return callback(light.data.light_saturation);
 			}
-			else {
-				if (typeof callback === "function") {
-					callback(true, false);
-				}
+			else if (typeof callback === "function") {
+				return callback(true, false);
 			}
 		},
 		set: function (device_data, light_saturation, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (light != null && light.data != null && light.data.client != null) {
+			if (light != null && light.data != null) {
 
-				// Get more information about light
-				light.data.client.getState(function (error, data) {
+				// Store light_saturation
+				light.data.light_saturation = light_saturation;
 
-					// If error return immediately
-					if (error) {
-						return callback(error, null);
-					}
-					else if (typeof data === "object") {
+				// Toggle color mode
+				if (light_saturation > 0) light.data.light_mode = "color";
 
-						// Store light_saturation
-						light.data.light_saturation = light_saturation;
-
-						// Toggle color mode
-						if(light_saturation > 0) light.data.light_mode = "color";
-
-						// Update bulb state
-						update(light.data.id, "light_saturation", function (err) {
-							callback(err, light_saturation);
-						})
-					}
-				});
-			}
-			else {
+				// Update bulb state
+				update(light.data.id, "light_saturation", function (err) {
+					callback(err, light_saturation);
+				})
+			} else {
 				if (typeof callback === "function") {
 					callback(true, false);
 				}
@@ -372,57 +376,27 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (light != null && light.data != null && light.data.client != null) {
-
-				// Get more information about light
-				light.data.client.getState(function (error, data) {
-
-					// If error return immediately
-					if (error) {
-						return callback(error, null);
-					}
-					else if (typeof data === "object") {
-
-						// Store dim
-						light.data.dim = data.color.brightness / 100;
-
-						// Return dim
-						if (callback) callback(error, light.data.dim);
-					}
-				});
+			if (light != null && light.data != null) {
+				return callback(light.data.dim);
 			}
-			else {
-				if (typeof callback === "function") {
-					callback(true, false);
-				}
+			else if (typeof callback === "function") {
+				return callback(true, false);
 			}
 		},
 		set: function (device_data, dim, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (light != null && light.data != null && light.data.client != null) {
+			if (light != null && light.data != null) {
 
-				// Get more information about light
-				light.data.client.getState(function (error, data) {
+				// Store dim
+				light.data.dim = dim;
 
-					// If error return immediately
-					if (error) {
-						return callback(error, null);
-					}
-					else if (typeof data === "object") {
-
-						// Store dim
-						light.data.dim = dim;
-
-						// Update bulb state
-						update(light.data.id, "dim", function (err) {
-							callback(err, dim);
-						})
-					}
-				});
-			}
-			else {
+				// Update bulb state
+				update(light.data.id, "dim", function (err) {
+					callback(err, dim);
+				})
+			} else {
 				if (typeof callback === "function") {
 					callback(true, false);
 				}
@@ -435,57 +409,27 @@ module.exports.capabilities = {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (light != null && light.data != null && light.data.client != null) {
-
-				// Get more information about light
-				light.data.client.getState(function (error, data) {
-
-					// If error return immediately
-					if (error) {
-						return callback(error, null);
-					}
-					else if (typeof data === "object") {
-
-						// Store light_temperature
-						light.data.light_temperature = map(2500, 9000, 0, 1, data.color.kelvin);
-
-						// Return mapped kelvin value
-						if (callback) callback(error, light.data.light_temperature);
-					}
-				});
+			if (light != null && light.data != null) {
+				return callback(light.data.light_temperature);
 			}
-			else {
-				if (typeof callback === "function") {
-					callback(true, false);
-				}
+			else if (typeof callback === "function") {
+				return callback(true, false);
 			}
 		},
 		set: function (device_data, light_temperature, callback) {
 			if (device_data instanceof Error) return callback(device_data);
 
 			var light = getLight(device_data.id);
-			if (light != null && light.data != null && light.data.client != null) {
+			if (light != null && light.data != null) {
 
-				// Get more information about light
-				light.data.client.getState(function (error, data) {
+				// Store light_temperature
+				light.data.light_temperature = light_temperature;
 
-					// If error return immediately
-					if (error) {
-						return callback(error, null);
-					}
-					else if (typeof data === "object") {
-
-						// Store light_temperature
-						light.data.light_temperature = light_temperature;
-
-						// Update bulb state
-						update(light.data.id, "light_temperature", function (err) {
-							callback(err, light_temperature)
-						})
-					}
-				});
-			}
-			else {
+				// Update bulb state
+				update(light.data.id, "light_temperature", function (err) {
+					callback(err, light_temperature)
+				})
+			} else {
 				if (typeof callback === "function") {
 					callback(true, false);
 				}
@@ -516,6 +460,10 @@ module.exports.capabilities = {
 				update(device_data.id, "light_mode", function (err) {
 					callback(err, light.data.light_mode);
 				});
+			} else {
+				if (typeof callback === "function") {
+					callback(true, false);
+				}
 			}
 		}
 	}
