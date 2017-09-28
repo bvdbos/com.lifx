@@ -1,7 +1,7 @@
 {
   "id": "com.lifx",
-  "version": "2.0.5",
-  "compatibility": ">=0.8.33",
+  "version": "2.0.6",
+  "compatibility": ">=1.0.0",
   "category": "lights",
   "name": {
     "en": "LIFX",
