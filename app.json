@@ -87,5 +87,15 @@
 				}
 			]
 		}
-	]
+	],
+	"capabilities": {
+		"lifx_infrared": {
+			"type": "number",
+			"title": {
+				"en": "Infrared"
+			},
+			"setable": true,
+			"getable": true
+		}
+	}
 }
