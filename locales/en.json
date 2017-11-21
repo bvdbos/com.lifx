@@ -1,3 +1,4 @@
 {
-	"old_device": "The app has been updated, and this device is incompatible. Please remove the device and add it again."
+	"old_device": "The app has been updated, and this device is incompatible. Please remove the device and add it again.",
+	"not_connected": "The light is not connected to the network."
 }
