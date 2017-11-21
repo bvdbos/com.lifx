@@ -88,6 +88,35 @@
 			]
 		}
 	],
+	"flow": {
+		"actions": [
+			{
+				"id": "set_infrared",
+				"title": {
+					"en": "Set Infrared",
+					"nl": "Zet Infrarood"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=lifx&capabilities=lifx_infrared"
+					},						
+					{
+						"name": "infrared",
+						"type": "range",
+						"min": 0,
+						"max": 1,
+						"step": 0.01,
+						"value": 0.5,
+						"label": "%",
+						"labelMultiplier": 100,
+						"labelDecimals": 0
+					}
+				]
+			}
+		]
+	},
 	"capabilities": {
 		"lifx_infrared": {
 			"type": "number",
