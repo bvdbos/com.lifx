@@ -91,6 +91,20 @@
 	"flow": {
 		"actions": [
 			{
+				"id": "set_scene",
+				"duration": true,
+				"title": {
+					"en": "Activate a scene",
+					"nl": "Activeer een scene"
+				},
+				"args": [
+					{
+						"name": "scene",
+						"type": "autocomplete"
+					}
+				]
+			},
+			{
 				"id": "set_infrared",
 				"title": {
 					"en": "Set Infrared",
