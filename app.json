@@ -1,58 +1,130 @@
 {
-  "id": "com.lifx",
-  "version": "2.0.6",
-  "compatibility": ">=1.0.0",
-  "category": "lights",
-  "name": {
-    "en": "LIFX",
-    "nl": "LIFX"
-  },
-  "description": {
-    "en": "This app contains the driver that enables you to control your LIFX Wi-Fi light bulbs",
-    "nl": "Deze app biedt ondersteuning voor het besturen van je LIFX wifi lampen"
-  },
-  "images": {
-    "large": "assets/images/large.jpg",
-    "small": "assets/images/small.jpg"
-  },
-  "author": {
-    "name": "Athom B.V."
-  },
-  "speech": [
-  ],
-  "drivers": [
-    {
-      "id": "lifx",
-      "name": {
-        "en": "LIFX",
-        "nl": "LIFX"
-      },
-      "class": "light",
-      "capabilities": [
-        "onoff", "dim", "light_hue", "light_saturation", "light_temperature", "light_mode"
-      ],
-      "images": {
-        "large": "drivers/lifx/assets/images/large.jpg",
-        "small": "drivers/lifx/assets/images/small.jpg"
-      },
-      "pair": [
-        {
-          "id": "list_bulbs",
-          "template": "list_devices",
-          "navigation": {
-            "next": "add_bulbs"
-          }
-        },
-        {
-          "id": "add_bulbs",
-          "template": "add_devices"
-        }
-      ]
-    }
-  ],
-  "dependencies": {
-    "node-lifx": "*"
-  },
-  "flow": {
-  }
+	"id": "com.lifx",
+	"version": "3.0.1",
+	"compatibility": ">=1.5.0",
+	"sdk": 2,
+	"category": "lights",
+	"name": {
+		"en": "LIFX",
+		"nl": "LIFX"
+	},
+	"description": {
+		"en": "Adds support for LIFX to Homey",
+		"nl": "Voegt ondersteuning toe voor LIFX aan Homey"
+	},
+	"images": {
+		"large": "assets/images/large.jpg",
+		"small": "assets/images/small.jpg"
+	},
+	"author": {
+		"name": "Athom B.V."
+	},
+	"drivers": [
+		{
+			"id": "lifx",
+			"name": {
+				"en": "LIFX",
+				"nl": "LIFX"
+			},
+			"class": "light",
+			"capabilities": [
+				"onoff",
+				"dim",
+				"light_hue",
+				"light_saturation",
+				"light_temperature",
+				"light_mode"
+			],
+			"capabilitiesOptions": {
+				"onoff": {
+					"opts": {
+						"duration": true
+					}
+				},
+				"dim": {
+					"opts": {
+						"duration": true
+					}
+				},
+				"light_hue": {
+					"opts": {
+						"duration": true
+					}
+				},
+				"light_saturation": {
+					"opts": {
+						"duration": true
+					}
+				},
+				"light_temperature": {
+					"opts": {
+						"duration": true
+					}
+				}
+			},
+			"images": {
+				"large": "drivers/lifx/assets/images/large.jpg",
+				"small": "drivers/lifx/assets/images/small.jpg"
+			},
+			"pair": [
+				{
+					"id": "login_oauth2",
+					"template": "login_oauth2"
+				},
+				{
+					"id": "list_devices",
+					"template": "list_devices",
+					"navigation": {
+						"next": "add_devices"
+					},
+					"options": {
+						"singular": true
+					}
+				},
+				{
+					"id": "add_devices",
+					"template": "add_devices"
+				}
+			]
+		}
+	],
+	"flow": {
+		"actions": [
+			{
+				"id": "set_infrared",
+				"title": {
+					"en": "Set Infrared",
+					"nl": "Zet Infrarood"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=lifx&capabilities=lifx_infrared"
+					},						
+					{
+						"name": "infrared",
+						"type": "range",
+						"min": 0,
+						"max": 1,
+						"step": 0.01,
+						"value": 0.5,
+						"label": "%",
+						"labelMultiplier": 100,
+						"labelDecimals": 0
+					}
+				]
+			}
+		]
+	},
+	"capabilities": {
+		"lifx_infrared": {
+			"type": "number",
+			"title": {
+				"en": "Infrared"
+			},
+			"setable": true,
+			"getable": true
+		}
+	}
 }

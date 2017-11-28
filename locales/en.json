@@ -1,4 +1,4 @@
 {
-  "offline": "This bulb appears to be offline",
-  "name": "LIFX Bulb"
+	"old_device": "The app has been updated, and this device is incompatible. Please remove the device and add it again.",
+	"not_connected": "The light is not connected to the network."
 }
