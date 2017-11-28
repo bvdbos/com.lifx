@@ -1,6 +1,6 @@
 {
 	"id": "com.lifx",
-	"version": "3.0.1",
+	"version": "3.0.2",
 	"compatibility": ">=1.5.0",
 	"sdk": 2,
 	"category": "lights",
@@ -96,6 +96,7 @@
 					"en": "Set Infrared",
 					"nl": "Zet Infrarood"
 				},
+				"duration": true,
 				"args": [
 					{
 						"name": "device",
@@ -114,6 +115,45 @@
 						"labelDecimals": 0
 					}
 				]
+			},
+			{
+				"id": "set_multizone",
+				"title": {
+					"en": "Set colors",
+					"nl": "Zet kleuren"
+				},
+				"duration": true,
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=lifx&capabilities=lifx_multizone"
+					},
+					{
+						"name": "color1",
+						"type": "color"
+					},
+					{
+						"name": "color2",
+						"type": "color"
+					},
+					{
+						"name": "color3",
+						"type": "color"
+					},
+					{
+						"name": "color4",
+						"type": "color"
+					},
+					{
+						"name": "color5",
+						"type": "color"
+					},
+					{
+						"name": "color6",
+						"type": "color"
+					}
+				]
 			}
 		]
 	},
@@ -122,6 +162,14 @@
 			"type": "number",
 			"title": {
 				"en": "Infrared"
+			},
+			"setable": true,
+			"getable": true
+		},
+		"lifx_multizone": {
+			"type": "string",
+			"title": {
+				"en": "Multizone"
 			},
 			"setable": true,
 			"getable": true
