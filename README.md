@@ -17,3 +17,5 @@ To use this app, log-in with your LIFX account in the 'Add device' screen.
 * LIFX Mini White
 * LIFX Tile
 * LIFX Beam
+
+Multizone devices (e.g. LED Strip) and Scenes are supported as well.
